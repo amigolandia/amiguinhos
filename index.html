@@ -8,13 +8,21 @@
 <body>
     <h1>Teste de Conexão</h1>
     <button onclick="sendData()">Enviar Ping</button>
+    <div id="status"></div>
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        
         function sendData() {
-            tg.sendData(JSON.stringify({ action: "ping" }));
-            alert("Enviado!");
+            const payload = JSON.stringify({ action: "ping" });
+            console.log("📤 Enviando:", payload);
+            tg.sendData(payload);
+            document.getElementById('status').innerText = "Enviado!";
         }
+        
+        // Opcional: receber resposta do bot (se ele responder via reply_web_app_data)
+        tg.onEvent('mainButtonClicked', () => {});
+        console.log("WebApp pronto!");
     </script>
 </body>
 </html>
