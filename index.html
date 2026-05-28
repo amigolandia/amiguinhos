@@ -357,15 +357,12 @@
 </head>
 <body>
     <div id="app">
-        <!-- Loading inicial -->
         <div id="loadingScreen" class="loading">
             <div class="spinner"></div>
             <p style="margin-top: 10px">Carregando...</p>
         </div>
 
-        <!-- Conteúdo principal -->
         <div id="mainContent" style="display: none;">
-            <!-- Header com saldo -->
             <div class="header">
                 <span>👤 <span id="userName">Usuário</span></span>
                 <button class="action-btn secondary" style="padding: 6px 12px; font-size: 12px;" onclick="showProfile()">Perfil</button>
@@ -376,7 +373,6 @@
                 <div class="balance-value" id="balanceValue">R$ 0,00</div>
             </div>
 
-            <!-- Abas -->
             <div class="tab-bar">
                 <button class="tab active" onclick="switchPage('loja')">
                     <span class="tab-icon">🛒</span>
@@ -392,20 +388,15 @@
                 </button>
             </div>
 
-            <!-- Página Loja -->
             <div id="pageLoja" class="page active">
                 <div class="section-title">🛍️ PRODUTOS</div>
-                <div id="productsList" class="product-grid">
-                    <!-- Produtos carregados via JS -->
-                </div>
-
+                <div id="productsList" class="product-grid"></div>
                 <div class="action-buttons">
                     <button class="action-btn" onclick="showAddBalance()">➕ Adicionar Saldo</button>
                     <button class="action-btn secondary" onclick="showRedeem()">🎫 Resgatar Código</button>
                 </div>
             </div>
 
-            <!-- Página Netflix -->
             <div id="pageNetflix" class="page">
                 <div class="section-title">🎬 GERAR LINK NETFLIX</div>
                 <div class="netflix-plans">
@@ -418,30 +409,22 @@
                 </div>
             </div>
 
-            <!-- Página Perfil -->
             <div id="pagePerfil" class="page">
                 <div class="section-title">👤 MEU PERFIL</div>
-                <div id="profileInfo">
-                    <!-- Perfil carregado via JS -->
-                </div>
+                <div id="profileInfo"></div>
                 <div class="section-title">📦 MINHAS COMPRAS</div>
-                <div id="purchasesList" class="purchases-list">
-                    <!-- Compras carregadas via JS -->
-                </div>
+                <div id="purchasesList" class="purchases-list"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal genérico -->
     <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Título</h3>
                 <button class="close-modal" onclick="closeModal()">✕</button>
             </div>
-            <div id="modalBody">
-                <!-- Conteúdo do modal -->
-            </div>
+            <div id="modalBody"></div>
         </div>
     </div>
 
@@ -453,8 +436,8 @@
         let currentUser = null;
         let currentBalance = 0;
         let pendingRequest = false;
+        let responseCallbacks = {};
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             tg.ready();
             const user = tg.initDataUnsafe.user;
@@ -464,6 +447,34 @@
             }
             loadInitialData();
         });
+
+        // Escuta respostas do bot enviadas via reply_web_app_data
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.messageId && responseCallbacks[event.data.messageId]) {
+                responseCallbacks[event.data.messageId](event.data);
+                delete responseCallbacks[event.data.messageId];
+            } else if (event.data && typeof event.data === 'object') {
+                // Fallback: tenta tratar como resposta genérica
+                console.log('Resposta recebida:', event.data);
+            }
+        });
+
+        function sendToBot(action, data = {}) {
+            return new Promise((resolve) => {
+                const messageId = Date.now() + Math.random();
+                responseCallbacks[messageId] = resolve;
+                
+                const payload = { action, ...data, messageId };
+                tg.sendData(JSON.stringify(payload));
+                
+                setTimeout(() => {
+                    if (responseCallbacks[messageId]) {
+                        delete responseCallbacks[messageId];
+                        resolve({ error: 'Timeout' });
+                    }
+                }, 30000);
+            });
+        }
 
         async function loadInitialData() {
             showLoading(true);
@@ -475,38 +486,6 @@
             showLoading(false);
             document.getElementById('mainContent').style.display = 'block';
             document.getElementById('loadingScreen').style.display = 'none';
-        }
-
-        async function sendToBot(action, data = {}) {
-            if (pendingRequest) {
-                showToast('Aguarde, processando...', 'error');
-                return null;
-            }
-            
-            pendingRequest = true;
-            
-            return new Promise((resolve) => {
-                const messageId = Date.now();
-                const handler = (event) => {
-                    if (event.eventType === 'web_app_data_sent') {
-                        window.removeEventListener('message', handler);
-                        pendingRequest = false;
-                        resolve(event.data);
-                    }
-                };
-                
-                window.addEventListener('message', handler);
-                
-                const payload = JSON.stringify({ action, ...data, messageId });
-                
-                tg.sendData(payload);
-                
-                setTimeout(() => {
-                    window.removeEventListener('message', handler);
-                    pendingRequest = false;
-                    resolve({ error: 'Timeout' });
-                }, 30000);
-            });
         }
 
         async function loadBalance() {
@@ -537,9 +516,8 @@
                 container.innerHTML = '<div style="text-align:center; padding:40px">Nenhum produto disponível</div>';
                 return;
             }
-            
             container.innerHTML = products.map(product => `
-                <div class="product-card" onclick="buyProduct('${product.name}')">
+                <div class="product-card" onclick="buyProduct('${escapeHtml(product.name)}')">
                     <div class="product-name">${escapeHtml(product.name)}</div>
                     <div class="product-price">${formatCurrency(product.price)}</div>
                     <div class="product-stock">📦 ${product.stock || 0} unidades</div>
@@ -553,7 +531,6 @@
                 container.innerHTML = '<div style="text-align:center; padding:20px">Nenhuma compra realizada</div>';
                 return;
             }
-            
             container.innerHTML = purchases.map(p => `
                 <div class="purchase-item">
                     <div class="purchase-title">📦 ${escapeHtml(p.category)}</div>
@@ -568,7 +545,6 @@
             showLoading(true);
             const result = await sendToBot('buy_product', { product: productName });
             showLoading(false);
-            
             if (result && result.success) {
                 showToast(`✅ Compra realizada! ${result.message || ''}`, 'success');
                 await loadBalance();
@@ -586,7 +562,6 @@
         function showProductDelivery(data) {
             const modalBody = document.getElementById('modalBody');
             document.getElementById('modalTitle').innerText = '✅ PRODUTO ENTREGUE';
-            
             modalBody.innerHTML = `
                 <p><strong>Produto:</strong> ${escapeHtml(data.category || 'Produto')}</p>
                 <p><strong>Valor:</strong> ${formatCurrency(data.price)}</p>
@@ -594,40 +569,30 @@
                     <p><strong>🔑 Login:</strong> <code>${escapeHtml(data.login || 'N/A')}</code></p>
                     ${data.senha ? `<p><strong>🔒 Senha:</strong> <code>${escapeHtml(data.senha)}</code></p>` : ''}
                     ${data.descricao ? `<p><strong>📝 Descrição:</strong> ${escapeHtml(data.descricao)}</p>` : ''}
-                    ${data.expiry_date ? `<p><strong>⏳ Expira em:</strong> ${new Date(data.expiry_date * 1000).toLocaleString()}</p>` : ''}
                 </div>
                 <button class="action-btn" onclick="closeModal()">Fechar</button>
             `;
-            
             openModal();
         }
 
         async function generateNetflixLink(plan) {
-            const planNames = {
-                basic: 'Basic', standard: 'Standard', premium: 'Premium',
-                premium_br: 'Premium BR', premium_en: 'Premium EN', premium_es: 'Premium ES'
-            };
             const planPrices = {
                 basic: 0.25, standard: 0.50, premium: 1.00,
                 premium_br: 2.00, premium_en: 1.00, premium_es: 1.00
             };
-            
             if (currentBalance < planPrices[plan]) {
                 showToast(`❌ Saldo insuficiente! Necessário: ${formatCurrency(planPrices[plan])}`, 'error');
                 showAddBalance();
                 return;
             }
-            
             showLoading(true);
             const result = await sendToBot('generate_link', { plan: plan });
             showLoading(false);
-            
             if (result && result.success) {
                 const modalBody = document.getElementById('modalBody');
                 document.getElementById('modalTitle').innerText = '🎬 LINK NETFLIX GERADO';
-                
                 modalBody.innerHTML = `
-                    <p><strong>Plano:</strong> ${planNames[plan]}</p>
+                    <p><strong>Plano:</strong> ${plan.toUpperCase()}</p>
                     <p><strong>Valor cobrado:</strong> ${formatCurrency(planPrices[plan])}</p>
                     <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; margin: 15px 0;">
                         <p><strong>📱 LINK PHONE:</strong></p>
@@ -638,7 +603,6 @@
                     </div>
                     <button class="action-btn" onclick="closeModal()">Fechar</button>
                 `;
-                
                 openModal();
                 await loadBalance();
             } else {
@@ -649,7 +613,6 @@
         async function showAddBalance() {
             const modalBody = document.getElementById('modalBody');
             document.getElementById('modalTitle').innerText = '💰 ADICIONAR SALDO';
-            
             modalBody.innerHTML = `
                 <div class="input-group">
                     <input type="number" id="pixAmount" placeholder="Valor (mínimo R$ 5,00)" step="0.01" min="5">
@@ -657,7 +620,6 @@
                 <button class="action-btn" onclick="generatePix()">Gerar PIX</button>
                 <button class="action-btn secondary" onclick="closeModal()">Cancelar</button>
             `;
-            
             openModal();
         }
 
@@ -667,16 +629,13 @@
                 showToast('❌ Valor mínimo R$ 5,00', 'error');
                 return;
             }
-            
             closeModal();
             showLoading(true);
             const result = await sendToBot('generate_pix', { amount: amount });
             showLoading(false);
-            
             if (result && result.success) {
                 const modalBody = document.getElementById('modalBody');
                 document.getElementById('modalTitle').innerText = '💳 PIX GERADO';
-                
                 modalBody.innerHTML = `
                     <div class="pix-qr">
                         ${result.qr_url ? `<img src="${result.qr_url}" alt="QR Code PIX">` : ''}
@@ -690,7 +649,6 @@
                     <p>Após o pagamento, o saldo será creditado automaticamente.</p>
                     <button class="action-btn" onclick="closeModal()">Fechar</button>
                 `;
-                
                 openModal();
             } else {
                 showToast(result?.error || '❌ Erro ao gerar PIX', 'error');
@@ -700,7 +658,6 @@
         function showRedeem() {
             const modalBody = document.getElementById('modalBody');
             document.getElementById('modalTitle').innerText = '🎫 RESGATAR CÓDIGO';
-            
             modalBody.innerHTML = `
                 <div class="input-group">
                     <input type="text" id="redeemCode" placeholder="Digite o código">
@@ -708,7 +665,6 @@
                 <button class="action-btn" onclick="redeemCode()">Resgatar</button>
                 <button class="action-btn secondary" onclick="closeModal()">Cancelar</button>
             `;
-            
             openModal();
         }
 
@@ -718,12 +674,10 @@
                 showToast('❌ Digite um código', 'error');
                 return;
             }
-            
             closeModal();
             showLoading(true);
             const result = await sendToBot('redeem_code', { code: code });
             showLoading(false);
-            
             if (result && result.success) {
                 showToast(`✅ Código resgatado! +${formatCurrency(result.value)}`, 'success');
                 await loadBalance();
@@ -737,7 +691,6 @@
             showLoading(true);
             const result = await sendToBot('get_profile');
             showLoading(false);
-            
             if (result && result.profile) {
                 const profileDiv = document.getElementById('profileInfo');
                 profileDiv.innerHTML = `
@@ -756,14 +709,12 @@
                     </div>
                 `;
             }
-            
             await loadPurchases();
         }
 
         function switchPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            
             if (page === 'loja') {
                 document.getElementById('pageLoja').classList.add('active');
                 document.querySelector('.tab:first-child').classList.add('active');
