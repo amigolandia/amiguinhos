@@ -3,214 +3,812 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Amigo Bot - Loja</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Amigotst Bot</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            padding: 16px;
-            min-height: 100vh;
+            background: var(--tg-theme-bg-color, #0D0E11);
+            color: var(--tg-theme-text-color, #f5f5f5);
+            padding: 12px;
+            padding-bottom: 80px;
         }
-        
-        .card {
-            background: var(--tg-theme-secondary-bg-color);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
+
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            padding: 12px;
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            border-radius: 16px;
         }
-        
-        .balance {
+
+        .balance-card {
+            background: linear-gradient(135deg, #21c985, #0a5c3a);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .balance-value {
             font-size: 32px;
             font-weight: bold;
-            color: var(--tg-theme-button-color);
-            margin: 10px 0;
+            margin-top: 5px;
         }
-        
-        button {
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none;
-            padding: 14px 20px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            margin-top: 12px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        button:active {
-            opacity: 0.7;
-        }
-        
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--tg-theme-button-color);
-            color: var(--tg-theme-button-color);
-        }
-        
-        .row {
-            display: flex;
-            gap: 12px;
-            margin-top: 12px;
-        }
-        
-        .row button {
-            flex: 1;
-            margin-top: 0;
-        }
-        
-        h3 {
-            margin-bottom: 12px;
+
+        .section-title {
             font-size: 18px;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
         }
-        
-        .info-text {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color);
-            margin-top: 8px;
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .product-card {
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
             text-align: center;
         }
-        
-        .user-name {
-            font-weight: bold;
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-price {
             font-size: 18px;
+            font-weight: bold;
+            color: #21c985;
+        }
+
+        .product-stock {
+            font-size: 12px;
+            color: #8C8C8C;
+            margin-top: 5px;
+        }
+
+        .netflix-plans {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .plan-btn {
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            border: none;
+            color: var(--tg-theme-text-color, #fff);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-btn:active {
+            transform: scale(0.96);
+        }
+
+        .plan-btn.basic { border-left: 4px solid #4a90e2; }
+        .plan-btn.standard { border-left: 4px solid #50e3c2; }
+        .plan-btn.premium { border-left: 4px solid #f5a623; }
+        .plan-btn.premium-br { border-left: 4px solid #21c985; }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: var(--tg-theme-button-color, #21c985);
+            color: var(--tg-theme-button-text-color, #000);
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .action-btn.secondary {
+            background: var(--tg-theme-secondary-bg-color, #2a2a2a);
+            color: var(--tg-theme-text-color, #fff);
+        }
+
+        .action-btn.danger {
+            background: #ff493f20;
+            color: #ff493f;
+            border: 1px solid #ff493f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-bg-color, #0D0E11);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--tg-theme-text-color, #fff);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .pix-qr {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pix-qr img {
+            width: 200px;
+            height: 200px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .pix-code {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            color: var(--tg-theme-text-color, #fff);
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #21c985;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #21c985;
+            color: #000;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            z-index: 1100;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .toast.error {
+            background: #ff493f;
+            color: #fff;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            padding: 8px 16px;
+            gap: 8px;
+            border-top: 1px solid #333;
+        }
+
+        .tab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #8C8C8C;
+            padding: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+
+        .tab.active {
+            color: #21c985;
+            background: #21c98520;
+        }
+
+        .tab-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .purchases-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .purchase-item {
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .purchase-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .purchase-details {
+            font-size: 12px;
+            color: #8C8C8C;
+        }
+
+        .purchase-login {
+            font-family: monospace;
+            background: #0D0E11;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 11px;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="user-name" id="user-name">Carregando...</div>
-        <div class="balance" id="user-balance">💰 R$ 0,00</div>
-        <div class="info-text">ID: <span id="user-id">-</span></div>
-    </div>
-    
-    <div class="card">
-        <h3>🎬 NETFLIX</h3>
-        <div class="row">
-            <button onclick="sendCommand('basic_link')">🟦 Basic<br><small>R$ 0,25</small></button>
-            <button onclick="sendCommand('standard_link')">🟪 Standard<br><small>R$ 0,50</small></button>
-            <button onclick="sendCommand('premium_link')">🟥 Premium<br><small>R$ 1,00</small></button>
+    <div id="app">
+        <!-- Loading inicial -->
+        <div id="loadingScreen" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px">Carregando...</p>
         </div>
-        <div class="row">
-            <button onclick="sendCommand('premium_br_link')">🇧🇷 Premium BR<br><small>R$ 2,00</small></button>
-            <button onclick="sendCommand('premium_en_link')">🇺🇸 Premium EN<br><small>R$ 1,00</small></button>
-            <button onclick="sendCommand('premium_es_link')">🇪🇸 Premium ES<br><small>R$ 1,00</small></button>
+
+        <!-- Conteúdo principal -->
+        <div id="mainContent" style="display: none;">
+            <!-- Header com saldo -->
+            <div class="header">
+                <span>👤 <span id="userName">Usuário</span></span>
+                <button class="action-btn secondary" style="padding: 6px 12px; font-size: 12px;" onclick="showProfile()">Perfil</button>
+            </div>
+
+            <div class="balance-card">
+                <div class="balance-label">💰 SEU SALDO</div>
+                <div class="balance-value" id="balanceValue">R$ 0,00</div>
+            </div>
+
+            <!-- Abas -->
+            <div class="tab-bar">
+                <button class="tab active" onclick="switchPage('loja')">
+                    <span class="tab-icon">🛒</span>
+                    <span>Loja</span>
+                </button>
+                <button class="tab" onclick="switchPage('netflix')">
+                    <span class="tab-icon">🎬</span>
+                    <span>Netflix</span>
+                </button>
+                <button class="tab" onclick="switchPage('perfil')">
+                    <span class="tab-icon">👤</span>
+                    <span>Perfil</span>
+                </button>
+            </div>
+
+            <!-- Página Loja -->
+            <div id="pageLoja" class="page active">
+                <div class="section-title">🛍️ PRODUTOS</div>
+                <div id="productsList" class="product-grid">
+                    <!-- Produtos carregados via JS -->
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="showAddBalance()">➕ Adicionar Saldo</button>
+                    <button class="action-btn secondary" onclick="showRedeem()">🎫 Resgatar Código</button>
+                </div>
+            </div>
+
+            <!-- Página Netflix -->
+            <div id="pageNetflix" class="page">
+                <div class="section-title">🎬 GERAR LINK NETFLIX</div>
+                <div class="netflix-plans">
+                    <button class="plan-btn basic" onclick="generateNetflixLink('basic')">🟦 Basic<br><small>R$ 0,25</small></button>
+                    <button class="plan-btn standard" onclick="generateNetflixLink('standard')">🟪 Standard<br><small>R$ 0,50</small></button>
+                    <button class="plan-btn premium" onclick="generateNetflixLink('premium')">🟥 Premium<br><small>R$ 1,00</small></button>
+                    <button class="plan-btn premium-br" onclick="generateNetflixLink('premium_br')">🇧🇷 Premium BR<br><small>R$ 2,00</small></button>
+                    <button class="plan-btn premium" onclick="generateNetflixLink('premium_en')">🇺🇸 Premium EN<br><small>R$ 1,00</small></button>
+                    <button class="plan-btn premium" onclick="generateNetflixLink('premium_es')">🇪🇸 Premium ES<br><small>R$ 1,00</small></button>
+                </div>
+            </div>
+
+            <!-- Página Perfil -->
+            <div id="pagePerfil" class="page">
+                <div class="section-title">👤 MEU PERFIL</div>
+                <div id="profileInfo">
+                    <!-- Perfil carregado via JS -->
+                </div>
+                <div class="section-title">📦 MINHAS COMPRAS</div>
+                <div id="purchasesList" class="purchases-list">
+                    <!-- Compras carregadas via JS -->
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div class="card">
-        <h3>🛍️ MINHA CONTA</h3>
-        <button onclick="sendCommand('saldo')">💰 Ver Saldo</button>
-        <button onclick="sendCommand('add_balance')">➕ Adicionar Saldo (PIX)</button>
-        <button onclick="sendCommand('meusprodutos')">📦 Meus Produtos</button>
-    </div>
-    
-    <div class="card">
-        <h3>👥 AFILIADOS</h3>
-        <button onclick="sendCommand('mostrar_link_afiliado')">🔗 Meu Link de Indicação</button>
-        <button onclick="sendCommand('ranking')">🏆 Ranking</button>
-        <div class="row">
-            <button onclick="sendCommand('sacar_afiliado 5')">💸 Sacar R$ 5</button>
-            <button onclick="sendCommand('sacar_afiliado 10')">💸 Sacar R$ 10</button>
-            <button onclick="sendCommand('sacar_afiliado 20')">💸 Sacar R$ 20</button>
+
+    <!-- Modal genérico -->
+    <div id="modal" class="modal" onclick="if(event.target === this) closeModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Título</h3>
+                <button class="close-modal" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody">
+                <!-- Conteúdo do modal -->
+            </div>
         </div>
     </div>
-    
-    <div class="card">
-        <h3>🎫 OUTROS</h3>
-        <button onclick="sendCommand('loja_menu')">🛒 Ir para Loja</button>
-        <button onclick="sendCommand('resgatar')">🎫 Resgatar Código</button>
-        <button onclick="sendCommand('ticket')">📝 Abrir Ticket</button>
-    </div>
-    
-    <div class="card">
-        <h3>ℹ️ INFORMAÇÕES</h3>
-        <button onclick="sendCommand('menu_termos')">📄 Termos e Regras</button>
-        <button onclick="sendCommand('menu_group')">👥 Grupo de Clientes</button>
-        <button onclick="openSupport()">👨‍💻 Suporte</button>
-    </div>
-    
-    <div class="info-text">
-        Clique em qualquer botão para executar o comando no chat
-    </div>
-    
+
     <script>
-        const webApp = window.Telegram.WebApp;
-        webApp.expand();
-        webApp.ready();
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.hide();
         
-        const user = webApp.initDataUnsafe.user || {};
-        const BOT_USERNAME = "amigotstbot";
-        
-        // Exibir dados do usuário
-        document.getElementById('user-name').innerText = user.first_name || user.username || "Usuário";
-        document.getElementById('user-id').innerText = user.id || "?";
-        
-        function sendCommand(command) {
-            let url = `https://t.me/${BOT_USERNAME}`;
-            
-            if (command === 'add_balance') {
-                url += `?start=add_balance`;
-            } else if (command === 'loja_menu') {
-                url += `?start=loja_menu`;
-            } else if (command === 'basic_link') {
-                url += `?start=basic_link`;
-            } else if (command === 'standard_link') {
-                url += `?start=standard_link`;
-            } else if (command === 'premium_link') {
-                url += `?start=premium_link`;
-            } else if (command === 'premium_br_link') {
-                url += `?start=premium_br_link`;
-            } else if (command === 'premium_en_link') {
-                url += `?start=premium_en_link`;
-            } else if (command === 'premium_es_link') {
-                url += `?start=premium_es_link`;
-            } else if (command === 'mostrar_link_afiliado') {
-                url += `?start=mostrar_link_afiliado`;
-            } else if (command === 'resgatar') {
-                url += `?start=resgatar`;
-            } else if (command === 'menu_termos') {
-                url += `?start=menu_terms`;
-            } else if (command === 'menu_group') {
-                url += `?start=menu_group`;
-            } else {
-                url += `?start=${command}`;
+        let currentUser = null;
+        let currentBalance = 0;
+        let pendingRequest = false;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            tg.ready();
+            const user = tg.initDataUnsafe.user;
+            if (user) {
+                document.getElementById('userName').innerText = user.first_name || user.username || 'Usuário';
+                currentUser = user;
+            }
+            loadInitialData();
+        });
+
+        async function loadInitialData() {
+            showLoading(true);
+            await Promise.all([
+                loadBalance(),
+                loadProducts(),
+                loadPurchases()
+            ]);
+            showLoading(false);
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('loadingScreen').style.display = 'none';
+        }
+
+        async function sendToBot(action, data = {}) {
+            if (pendingRequest) {
+                showToast('Aguarde, processando...', 'error');
+                return null;
             }
             
-            webApp.openTelegramLink(url);
-            webApp.close();
+            pendingRequest = true;
+            
+            return new Promise((resolve) => {
+                const messageId = Date.now();
+                const handler = (event) => {
+                    if (event.eventType === 'web_app_data_sent') {
+                        window.removeEventListener('message', handler);
+                        pendingRequest = false;
+                        resolve(event.data);
+                    }
+                };
+                
+                window.addEventListener('message', handler);
+                
+                const payload = JSON.stringify({ action, ...data, messageId });
+                
+                tg.sendData(payload);
+                
+                setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    pendingRequest = false;
+                    resolve({ error: 'Timeout' });
+                }, 30000);
+            });
         }
-        
-        function openSupport() {
-            webApp.openTelegramLink("https://t.me/script_amigo");
+
+        async function loadBalance() {
+            const result = await sendToBot('get_balance');
+            if (result && !result.error) {
+                currentBalance = result.balance || 0;
+                document.getElementById('balanceValue').innerHTML = formatCurrency(currentBalance);
+            }
         }
-        
-        // Mostrar popup de boas-vindas na primeira vez
-        if (!localStorage.getItem('welcome_shown')) {
-            setTimeout(() => {
-                webApp.showPopup({
-                    title: "🎉 Bem-vindo!",
-                    message: "Use os botões abaixo para acessar as funções do bot rapidamente!",
-                    buttons: [{type: "ok"}]
-                });
-                localStorage.setItem('welcome_shown', 'true');
-            }, 500);
+
+        async function loadProducts() {
+            const result = await sendToBot('get_products');
+            if (result && result.products) {
+                renderProducts(result.products);
+            }
+        }
+
+        async function loadPurchases() {
+            const result = await sendToBot('get_purchases');
+            if (result && result.purchases) {
+                renderPurchases(result.purchases);
+            }
+        }
+
+        function renderProducts(products) {
+            const container = document.getElementById('productsList');
+            if (!products || products.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:40px">Nenhum produto disponível</div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(product => `
+                <div class="product-card" onclick="buyProduct('${product.name}')">
+                    <div class="product-name">${escapeHtml(product.name)}</div>
+                    <div class="product-price">${formatCurrency(product.price)}</div>
+                    <div class="product-stock">📦 ${product.stock || 0} unidades</div>
+                </div>
+            `).join('');
+        }
+
+        function renderPurchases(purchases) {
+            const container = document.getElementById('purchasesList');
+            if (!purchases || purchases.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px">Nenhuma compra realizada</div>';
+                return;
+            }
+            
+            container.innerHTML = purchases.map(p => `
+                <div class="purchase-item">
+                    <div class="purchase-title">📦 ${escapeHtml(p.category)}</div>
+                    <div class="purchase-details">💰 ${formatCurrency(p.price)}</div>
+                    ${p.login ? `<div class="purchase-login">🔑 ${escapeHtml(p.login)}${p.senha ? `<br>🔒 ${escapeHtml(p.senha)}` : ''}</div>` : ''}
+                    <div class="purchase-details">📅 ${new Date(p.timestamp * 1000).toLocaleDateString()}</div>
+                </div>
+            `).join('');
+        }
+
+        async function buyProduct(productName) {
+            showLoading(true);
+            const result = await sendToBot('buy_product', { product: productName });
+            showLoading(false);
+            
+            if (result && result.success) {
+                showToast(`✅ Compra realizada! ${result.message || ''}`, 'success');
+                await loadBalance();
+                if (result.login) {
+                    showProductDelivery(result);
+                }
+            } else {
+                showToast(result?.error || '❌ Erro ao comprar', 'error');
+                if (result?.insufficient) {
+                    showAddBalance();
+                }
+            }
+        }
+
+        function showProductDelivery(data) {
+            const modalBody = document.getElementById('modalBody');
+            document.getElementById('modalTitle').innerText = '✅ PRODUTO ENTREGUE';
+            
+            modalBody.innerHTML = `
+                <p><strong>Produto:</strong> ${escapeHtml(data.category || 'Produto')}</p>
+                <p><strong>Valor:</strong> ${formatCurrency(data.price)}</p>
+                <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>🔑 Login:</strong> <code>${escapeHtml(data.login || 'N/A')}</code></p>
+                    ${data.senha ? `<p><strong>🔒 Senha:</strong> <code>${escapeHtml(data.senha)}</code></p>` : ''}
+                    ${data.descricao ? `<p><strong>📝 Descrição:</strong> ${escapeHtml(data.descricao)}</p>` : ''}
+                    ${data.expiry_date ? `<p><strong>⏳ Expira em:</strong> ${new Date(data.expiry_date * 1000).toLocaleString()}</p>` : ''}
+                </div>
+                <button class="action-btn" onclick="closeModal()">Fechar</button>
+            `;
+            
+            openModal();
+        }
+
+        async function generateNetflixLink(plan) {
+            const planNames = {
+                basic: 'Basic', standard: 'Standard', premium: 'Premium',
+                premium_br: 'Premium BR', premium_en: 'Premium EN', premium_es: 'Premium ES'
+            };
+            const planPrices = {
+                basic: 0.25, standard: 0.50, premium: 1.00,
+                premium_br: 2.00, premium_en: 1.00, premium_es: 1.00
+            };
+            
+            if (currentBalance < planPrices[plan]) {
+                showToast(`❌ Saldo insuficiente! Necessário: ${formatCurrency(planPrices[plan])}`, 'error');
+                showAddBalance();
+                return;
+            }
+            
+            showLoading(true);
+            const result = await sendToBot('generate_link', { plan: plan });
+            showLoading(false);
+            
+            if (result && result.success) {
+                const modalBody = document.getElementById('modalBody');
+                document.getElementById('modalTitle').innerText = '🎬 LINK NETFLIX GERADO';
+                
+                modalBody.innerHTML = `
+                    <p><strong>Plano:</strong> ${planNames[plan]}</p>
+                    <p><strong>Valor cobrado:</strong> ${formatCurrency(planPrices[plan])}</p>
+                    <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; margin: 15px 0;">
+                        <p><strong>📱 LINK PHONE:</strong></p>
+                        <code style="word-break: break-all;">${escapeHtml(result.link)}</code>
+                        <p style="margin-top: 10px;"><strong>📺 LINK TV:</strong></p>
+                        <code style="word-break: break-all;">${escapeHtml(result.tv_link || result.link)}</code>
+                        <p style="margin-top: 10px;"><strong>⏰ Expira em:</strong> ${escapeHtml(result.expires || 'N/A')}</p>
+                    </div>
+                    <button class="action-btn" onclick="closeModal()">Fechar</button>
+                `;
+                
+                openModal();
+                await loadBalance();
+            } else {
+                showToast(result?.error || '❌ Erro ao gerar link', 'error');
+            }
+        }
+
+        async function showAddBalance() {
+            const modalBody = document.getElementById('modalBody');
+            document.getElementById('modalTitle').innerText = '💰 ADICIONAR SALDO';
+            
+            modalBody.innerHTML = `
+                <div class="input-group">
+                    <input type="number" id="pixAmount" placeholder="Valor (mínimo R$ 5,00)" step="0.01" min="5">
+                </div>
+                <button class="action-btn" onclick="generatePix()">Gerar PIX</button>
+                <button class="action-btn secondary" onclick="closeModal()">Cancelar</button>
+            `;
+            
+            openModal();
+        }
+
+        async function generatePix() {
+            const amount = parseFloat(document.getElementById('pixAmount')?.value);
+            if (isNaN(amount) || amount < 5) {
+                showToast('❌ Valor mínimo R$ 5,00', 'error');
+                return;
+            }
+            
+            closeModal();
+            showLoading(true);
+            const result = await sendToBot('generate_pix', { amount: amount });
+            showLoading(false);
+            
+            if (result && result.success) {
+                const modalBody = document.getElementById('modalBody');
+                document.getElementById('modalTitle').innerText = '💳 PIX GERADO';
+                
+                modalBody.innerHTML = `
+                    <div class="pix-qr">
+                        ${result.qr_url ? `<img src="${result.qr_url}" alt="QR Code PIX">` : ''}
+                    </div>
+                    <div class="pix-code">
+                        <strong>📋 Código PIX:</strong><br>
+                        <code style="word-break: break-all;">${escapeHtml(result.pix_code)}</code>
+                    </div>
+                    <p><strong>💰 Valor:</strong> ${formatCurrency(amount)}</p>
+                    <p><strong>⏳ Válido por 15 minutos</strong></p>
+                    <p>Após o pagamento, o saldo será creditado automaticamente.</p>
+                    <button class="action-btn" onclick="closeModal()">Fechar</button>
+                `;
+                
+                openModal();
+            } else {
+                showToast(result?.error || '❌ Erro ao gerar PIX', 'error');
+            }
+        }
+
+        function showRedeem() {
+            const modalBody = document.getElementById('modalBody');
+            document.getElementById('modalTitle').innerText = '🎫 RESGATAR CÓDIGO';
+            
+            modalBody.innerHTML = `
+                <div class="input-group">
+                    <input type="text" id="redeemCode" placeholder="Digite o código">
+                </div>
+                <button class="action-btn" onclick="redeemCode()">Resgatar</button>
+                <button class="action-btn secondary" onclick="closeModal()">Cancelar</button>
+            `;
+            
+            openModal();
+        }
+
+        async function redeemCode() {
+            const code = document.getElementById('redeemCode')?.value?.trim().toUpperCase();
+            if (!code) {
+                showToast('❌ Digite um código', 'error');
+                return;
+            }
+            
+            closeModal();
+            showLoading(true);
+            const result = await sendToBot('redeem_code', { code: code });
+            showLoading(false);
+            
+            if (result && result.success) {
+                showToast(`✅ Código resgatado! +${formatCurrency(result.value)}`, 'success');
+                await loadBalance();
+            } else {
+                showToast(result?.error || '❌ Código inválido', 'error');
+            }
+        }
+
+        async function showProfile() {
+            switchPage('perfil');
+            showLoading(true);
+            const result = await sendToBot('get_profile');
+            showLoading(false);
+            
+            if (result && result.profile) {
+                const profileDiv = document.getElementById('profileInfo');
+                profileDiv.innerHTML = `
+                    <div style="background: var(--tg-theme-secondary-bg-color, #1a1a1a); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                        <p><strong>🆔 ID:</strong> ${result.profile.user_id || 'N/A'}</p>
+                        <p><strong>📛 Nome:</strong> ${escapeHtml(result.profile.first_name || 'N/A')}</p>
+                        <p><strong>🔗 Username:</strong> @${escapeHtml(result.profile.username || 'N/A')}</p>
+                        <hr style="margin: 10px 0; border-color: #333;">
+                        <p><strong>💰 Saldo:</strong> ${formatCurrency(result.profile.balance || 0)}</p>
+                        <p><strong>💳 Total gasto:</strong> ${formatCurrency(result.profile.total_spent || 0)}</p>
+                        <hr style="margin: 10px 0; border-color: #333;">
+                        <p><strong>👥 Saldo afiliado:</strong> ${formatCurrency(result.profile.affiliate_balance || 0)}</p>
+                        <p><strong>👥 Indicações:</strong> ${result.profile.total_referrals || 0}</p>
+                        <p><strong>🔗 Link de indicação:</strong></p>
+                        <div class="purchase-login">${escapeHtml(result.profile.affiliate_link || 'N/A')}</div>
+                    </div>
+                `;
+            }
+            
+            await loadPurchases();
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            if (page === 'loja') {
+                document.getElementById('pageLoja').classList.add('active');
+                document.querySelector('.tab:first-child').classList.add('active');
+            } else if (page === 'netflix') {
+                document.getElementById('pageNetflix').classList.add('active');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            } else if (page === 'perfil') {
+                document.getElementById('pagePerfil').classList.add('active');
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                showProfile();
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showLoading(show) {
+            const loader = document.getElementById('loadingScreen');
+            if (loader) {
+                loader.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function openModal() {
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
         }
     </script>
 </body>
